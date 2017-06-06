@@ -5,7 +5,7 @@
 
 export class Traveler {
 
-    private static structureMatrixCache: {[roomName: number]: CostMatrix} = {};
+    private static structureMatrixCache: {[roomName: string]: CostMatrix} = {};
     private static creepMatrixCache: {[roomName: string]: CostMatrix} = {};
     private static creepMatrixTick: number;
     private static structureMatrixTick: number;
@@ -36,7 +36,7 @@ export class Traveler {
 
         // manage case where creep is nearby destination
         let rangeToDestination = creep.pos.getRangeTo(destination);
-        if (rangeToDestination <= options.range) {
+        if (options.range && rangeToDestination <= options.range) {
             return OK;
         } else if (rangeToDestination <= 1) {
             if (rangeToDestination === 1 && !options.range) {
@@ -143,7 +143,8 @@ export class Traveler {
         let nextDirection = parseInt(travelData.path[0], 10);
         if (options.returnData) {
             if (nextDirection) {
-                options.returnData.nextPos = Traveler.positionAtDirection(creep.pos, nextDirection);
+                let nextPos = Traveler.positionAtDirection(creep.pos, nextDirection);
+                if (nextPos) { options.returnData.nextPos = nextPos; }
             }
             options.returnData.state = state;
             options.returnData.path = travelData.path;
@@ -264,7 +265,8 @@ export class Traveler {
         let roomDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
         let allowedRooms = options.route;
         if (!allowedRooms && (options.useFindRoute || (options.useFindRoute === undefined && roomDistance > 2))) {
-            allowedRooms = this.findRoute(origin.roomName, destination.roomName, options);
+            let route = this.findRoute(origin.roomName, destination.roomName, options);
+            if (route) { allowedRooms = route; }
         }
 
         let roomsSearched = 0;
@@ -282,7 +284,7 @@ export class Traveler {
 
             roomsSearched++;
 
-            let matrix: CostMatrix;
+            let matrix;
             let room = Game.rooms[roomName];
             if (room) {
                 if (options.ignoreStructures) {
@@ -313,10 +315,10 @@ export class Traveler {
                 }
             }
 
-            return matrix;
+            return matrix as CostMatrix;
         };
 
-        let ret = PathFinder.search(origin, {pos: destination, range: options.range}, {
+        let ret = PathFinder.search(origin, {pos: destination, range: options.range!}, {
             maxOps: options.maxOps,
             maxRooms: options.maxRooms,
             plainCost: options.offRoad ? 1 : options.ignoreRoads ? 1 : 2,
@@ -358,7 +360,7 @@ export class Traveler {
      */
 
     public static findRoute(origin: string, destination: string,
-                            options: TravelToOptions = {}): {[roomName: string]: boolean } {
+                            options: TravelToOptions = {}): {[roomName: string]: boolean } | void {
 
         let restrictDistance = options.restrictDistance || Game.map.getRoomLinearDistance(origin, destination) + 10;
         let allowedRooms = { [ origin ]: true, [ destination ]: true };
@@ -435,7 +437,7 @@ export class Traveler {
      * @returns {number}
      */
 
-    public static routeDistance(origin: string, destination: string): number {
+    public static routeDistance(origin: string, destination: string): number | void {
         let linearDistance = Game.map.getRoomLinearDistance(origin, destination);
         if (linearDistance >= 32) {
             return linearDistance;
@@ -558,7 +560,7 @@ export class Traveler {
      * @returns {RoomPosition}
      */
 
-    public static positionAtDirection(origin: RoomPosition, direction: number): RoomPosition {
+    public static positionAtDirection(origin: RoomPosition, direction: number): RoomPosition | void {
         let offsetX = [0, 0, 1, 1, 1, 0, -1, -1, -1];
         let offsetY = [0, -1, -1, 0, 1, 1, 1, 0, -1];
         let x = origin.x + offsetX[direction];
