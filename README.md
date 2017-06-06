@@ -22,7 +22,7 @@ Traveler is a general-purpose tool for moving your creeps around. Feel free to f
     creep.travelTo(myDestination);
 ```
 
-![Installation animation](https://gfycat.com/CriminalGrotesqueEmperorpenguin)
+![Installation animation](https://thumbs.gfycat.com/CriminalGrotesqueEmperorpenguin-size_restricted.gif)
 
 #### Performance considerations
 1. `travelTo` creates a new object in creep memory, `_trav`, which is analogous to the object used by `moveTo()` for caching the creeps path. For this reason, it will save memory to use either `travelTo()` or `moveTo()` with a given creep, but not both.
