@@ -35,7 +35,7 @@ The file itself has comments, and you can also find documentation [in the wiki](
 ## Changelog
 
 2017-06-05
-* New version of Traveler! See what is different [here](https://github.com/bonzaiferroni/Traveler/wiki/Improving-Traveler).
+* New version of Traveler! See what is different [here](https://github.com/bonzaiferroni/Traveler/wiki/Improving-Traveler). The old version can still be found [here](https://github.com/bonzaiferroni/bonzAI/wiki/Traveler-API).
 
 2017-03-10
 * Fixed a bug where public ramparts were not set as valid positions for pathing in the costmatrix (thanks ricane!)
