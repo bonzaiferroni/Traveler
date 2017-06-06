@@ -26,8 +26,11 @@ Traveler is a general-purpose tool for moving your creeps around. Feel free to f
 1. `travelTo` creates a new object in creep memory, `_trav`, which is analogous to the object used by `moveTo()` for caching the creeps path. For this reason, it will save memory to use either `travelTo()` or `moveTo()` with a given creep, but not both.
 2. As with any algorithm where creeps aren't a consideration for pathing by default, you'll have best results when their path has a low chance of including immobile creeps. My creeps rarely reach the "stuck threshold" because I take extra considerations to keep the roads clear.
 
+## Documentation
 
-# Changelog
+The file itself has comments, and you can also find documentation [in the wiki](https://github.com/bonzaiferroni/Traveler/wiki/Traveler-API). I'm also looking for feedback and collaboration to improve Traveler, pull requests welcome!
+
+## Changelog
 
 2017-06-05
 * New version of Traveler! See what is different [here](https://github.com/bonzaiferroni/Traveler/wiki/Improving-Traveler).
