@@ -5,7 +5,7 @@ Traveler is a general-purpose tool for moving your creeps around. Feel free to f
 #### Features:
 * Efficient path-caching and CPU-use (you can see how it compares with `creep.moveTo()` [here](https://github.com/bonzaiferroni/bonzAI/wiki/Improving-on-moveTo's-efficiency))
 * Ignores creeps in pathing by default which allows for fewer PathFinder calls and [single-lane creep movement](https://github.com/bonzaiferroni/screepswiki/blob/master/gifs/s33-moveTo.gif)
-* Detects hostile rooms and will [path around them once discovered](https://github.com/bonzaiferroni/bonzAI/wiki/Improving-on-moveTo's-efficiency#long-distances-path-length-400)
+* Can detect hostile rooms and will [path around them once discovered](https://github.com/bonzaiferroni/bonzAI/wiki/Improving-on-moveTo's-efficiency#long-distances-path-length-400). More info on how to enable detection [here](https://github.com/bonzaiferroni/Traveler/wiki/Improving-Traveler:-Important-Changes#hostile-room-avoidance)
 * Effective [long-range pathing](https://github.com/bonzaiferroni/bonzAI/wiki/Improving-on-moveTo's-efficiency#very-long-distances-path-length-1200) 
 * [Lots of options]()
 
@@ -13,7 +13,7 @@ Traveler is a general-purpose tool for moving your creeps around. Feel free to f
 
 1. Download [Traveler.ts](https://gist.github.com/bonzaiferroni/18de0bf98228c28d1671d5d79627193b) or [Traveler.js](https://gist.github.com/bonzaiferroni/bbbbf8a681f071dc13759da8a1be316e). Semperrabbit has also [forked this gist](https://gist.github.com/semperrabbit/b44afff8f409fdad39c349aa1a7772db) and provided a javascript version with more customization.
 2. Add a require statement to `main.js`: 
- * `var Traveler = require('Traveler');` (in the sim or some private servers you might need to use `'Traveler.js'`)
+    * `var Traveler = require('Traveler');` (in the sim or some private servers you might need to use `'Traveler.js'`)
 3. Check out suggestions in the footer for implementing the functions (e.g., adding to creep prototype).
 
 #### Performance considerations
