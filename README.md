@@ -17,9 +17,10 @@ Traveler is a general-purpose tool for moving your creeps around. Feel free to f
     * `var Traveler = require('Traveler');`
     * (in the sim or some private servers you might need to use `'Traveler.js'`)
 3. Replace situations where you used `moveTo` with `travelTo`
-
+```
     // creep.moveTo(myDestination);
     creep.travelTo(myDestination);
+```
 
 #### Performance considerations
 1. `travelTo` creates a new object in creep memory, `_travel`, which is analogous to the object used by `moveTo()` for caching the creeps path. For this reason, it will save memory to use either `travelTo()` or `moveTo()` with a given creep, but not both.
