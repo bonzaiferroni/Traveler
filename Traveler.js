@@ -4,6 +4,13 @@
  */
 "use strict";
 class Traveler {
+    /**
+     * move creep to destination
+     * @param creep
+     * @param destination
+     * @param options
+     * @returns {number}
+     */
     static travelTo(creep, destination, options = {}) {
         // uncomment if you would like to register hostile rooms entered
         // this.updateRoomStatus(creep);
@@ -118,61 +125,66 @@ class Traveler {
         }
         return creep.move(nextDirection);
     }
+    /**
+     * make position objects consistent so that either can be used as an argument
+     * @param destination
+     * @returns {any}
+     */
     static normalizePos(destination) {
         if (!(destination instanceof RoomPosition)) {
             return destination.pos;
         }
         return destination;
     }
-    static deserializeState(travelData, destination) {
-        let state = {};
-        if (travelData.state) {
-            state.lastCoord = { x: travelData.state[STATE_PREV_X], y: travelData.state[STATE_PREV_Y] };
-            state.cpu = travelData.state[STATE_CPU];
-            state.stuckCount = travelData.state[STATE_STUCK];
-            state.destination = new RoomPosition(travelData.state[STATE_DEST_X], travelData.state[STATE_DEST_Y], travelData.state[STATE_DEST_ROOMNAME]);
-        }
-        else {
-            state.cpu = 0;
-            state.destination = destination;
-        }
-        return state;
-    }
-    static serializeState(creep, destination, state, travelData) {
-        travelData.state = [creep.pos.x, creep.pos.y, state.stuckCount, state.cpu, destination.x, destination.y,
-            destination.roomName];
-    }
+    /**
+     * check if room should be avoided by findRoute algorithm
+     * @param roomName
+     * @returns {RoomMemory|number}
+     */
     static checkAvoid(roomName) {
         return Memory.rooms[roomName] && Memory.rooms[roomName].avoid;
     }
+    /**
+     * check if a position is an exit
+     * @param pos
+     * @returns {boolean}
+     */
     static isExit(pos) {
         return pos.x === 0 || pos.y === 0 || pos.x === 49 || pos.y === 49;
     }
-    static isStuck(creep, state) {
-        let stuck = false;
-        if (state.lastCoord !== undefined) {
-            if (this.sameCoord(creep.pos, state.lastCoord)) {
-                // didn't move
-                stuck = true;
-            }
-            else if (this.isExit(creep.pos) && this.isExit(state.lastCoord)) {
-                // moved against exit
-                stuck = true;
-            }
-        }
-        return stuck;
-    }
+    /**
+     * check two coordinates match
+     * @param pos1
+     * @param pos2
+     * @returns {boolean}
+     */
     static sameCoord(pos1, pos2) {
         return pos1.x === pos2.x && pos1.y === pos2.y;
     }
+    /**
+     * check if two positions match
+     * @param pos1
+     * @param pos2
+     * @returns {boolean}
+     */
     static samePos(pos1, pos2) {
         return this.sameCoord(pos1, pos2) && pos1.roomName === pos2.roomName;
     }
+    /**
+     * draw a circle at position
+     * @param pos
+     * @param color
+     * @param opacity
+     */
     static circle(pos, color, opacity) {
         new RoomVisual(pos.roomName).circle(pos, {
             radius: .45, fill: "transparent", stroke: color, strokeWidth: .15, opacity: opacity
         });
     }
+    /**
+     * update memory on whether a room should be avoided based on controller owner
+     * @param room
+     */
     static updateRoomStatus(room) {
         if (!room) {
             return;
@@ -186,6 +198,13 @@ class Traveler {
             }
         }
     }
+    /**
+     * find a path from origin to destination
+     * @param origin
+     * @param destination
+     * @param options
+     * @returns {PathfinderReturn}
+     */
     static findTravelPath(origin, destination, options = {}) {
         _.defaults(options, {
             ignoreCreeps: true,
@@ -279,6 +298,13 @@ class Traveler {
         }
         return ret;
     }
+    /**
+     * find a viable sequence of rooms that can be used to narrow down pathfinder's search algorithm
+     * @param origin
+     * @param destination
+     * @param options
+     * @returns {{}}
+     */
     static findRoute(origin, destination, options = {}) {
         let restrictDistance = options.restrictDistance || Game.map.getRoomLinearDistance(origin, destination) + 10;
         let allowedRooms = { [origin]: true, [destination]: true };
@@ -341,9 +367,15 @@ class Traveler {
         }
         return allowedRooms;
     }
+    /**
+     * check how many rooms were included in a route returned by findRoute
+     * @param origin
+     * @param destination
+     * @returns {number}
+     */
     static routeDistance(origin, destination) {
         let linearDistance = Game.map.getRoomLinearDistance(origin, destination);
-        if (linearDistance >= 20) {
+        if (linearDistance >= 32) {
             return linearDistance;
         }
         let allowedRooms = this.findRoute(origin, destination);
@@ -351,6 +383,12 @@ class Traveler {
             return Object.keys(allowedRooms).length;
         }
     }
+    /**
+     * build a cost matrix based on structures in the room. Will be cached for more than one tick. Requires vision.
+     * @param room
+     * @param freshMatrix
+     * @returns {any}
+     */
     static getStructureMatrix(room, freshMatrix) {
         if (!this.structureMatrixCache[room.name] || (freshMatrix && Game.time !== this.structureMatrixTick)) {
             this.structureMatrixTick = Game.time;
@@ -359,6 +397,25 @@ class Traveler {
         }
         return this.structureMatrixCache[room.name];
     }
+    /**
+     * build a cost matrix based on creeps and structures in the room. Will be cached for one tick. Requires vision.
+     * @param room
+     * @returns {any}
+     */
+    static getCreepMatrix(room) {
+        if (!this.creepMatrixCache[room.name] || Game.time !== this.creepMatrixTick) {
+            this.creepMatrixTick = Game.time;
+            this.creepMatrixCache[room.name] = Traveler.addCreepsToMatrix(room, this.getStructureMatrix(room, true).clone());
+        }
+        return this.creepMatrixCache[room.name];
+    }
+    /**
+     * add structures to matrix so that impassible structures can be avoided and roads given a lower cost
+     * @param room
+     * @param matrix
+     * @param roadCost
+     * @returns {CostMatrix}
+     */
     static addStructuresToMatrix(room, matrix, roadCost) {
         let impassibleStructures = [];
         for (let structure of room.find(FIND_STRUCTURES)) {
@@ -389,17 +446,23 @@ class Traveler {
         }
         return matrix;
     }
-    static getCreepMatrix(room) {
-        if (!this.creepMatrixCache[room.name] || Game.time !== this.creepMatrixTick) {
-            this.creepMatrixTick = Game.time;
-            this.creepMatrixCache[room.name] = Traveler.addCreepsToMatrix(room, this.getStructureMatrix(room, true).clone());
-        }
-        return this.creepMatrixCache[room.name];
-    }
+    /**
+     * add creeps to matrix so that they will be avoided by other creeps
+     * @param room
+     * @param matrix
+     * @returns {CostMatrix}
+     */
     static addCreepsToMatrix(room, matrix) {
         room.find(FIND_CREEPS).forEach((creep) => matrix.set(creep.pos.x, creep.pos.y, 0xff));
         return matrix;
     }
+    /**
+     * serialize a path, traveler style. Returns a string of directions.
+     * @param startPos
+     * @param path
+     * @param color
+     * @returns {string}
+     */
     static serializePath(startPos, path, color = "orange") {
         let serializedPath = "";
         let lastPosition = startPos;
@@ -414,6 +477,12 @@ class Traveler {
         }
         return serializedPath;
     }
+    /**
+     * returns a position at a direction relative to origin
+     * @param origin
+     * @param direction
+     * @returns {RoomPosition}
+     */
     static positionAtDirection(origin, direction) {
         let offsetX = [0, 0, 1, 1, 1, 0, -1, -1, -1];
         let offsetY = [0, -1, -1, 0, 1, 1, 1, 0, -1];
@@ -424,6 +493,10 @@ class Traveler {
         }
         return new RoomPosition(x, y, origin.roomName);
     }
+    /**
+     * convert room avoidance memory from the old pattern to the one currently used
+     * @param cleanup
+     */
     static patchMemory(cleanup = false) {
         if (!Memory.empire) {
             return;
@@ -448,6 +521,38 @@ class Traveler {
             delete Memory.empire.hostileRooms;
         }
         console.log(`TRAVELER: room avoidance data patched for ${count} rooms`);
+    }
+    static deserializeState(travelData, destination) {
+        let state = {};
+        if (travelData.state) {
+            state.lastCoord = { x: travelData.state[STATE_PREV_X], y: travelData.state[STATE_PREV_Y] };
+            state.cpu = travelData.state[STATE_CPU];
+            state.stuckCount = travelData.state[STATE_STUCK];
+            state.destination = new RoomPosition(travelData.state[STATE_DEST_X], travelData.state[STATE_DEST_Y], travelData.state[STATE_DEST_ROOMNAME]);
+        }
+        else {
+            state.cpu = 0;
+            state.destination = destination;
+        }
+        return state;
+    }
+    static serializeState(creep, destination, state, travelData) {
+        travelData.state = [creep.pos.x, creep.pos.y, state.stuckCount, state.cpu, destination.x, destination.y,
+            destination.roomName];
+    }
+    static isStuck(creep, state) {
+        let stuck = false;
+        if (state.lastCoord !== undefined) {
+            if (this.sameCoord(creep.pos, state.lastCoord)) {
+                // didn't move
+                stuck = true;
+            }
+            else if (this.isExit(creep.pos) && this.isExit(state.lastCoord)) {
+                // moved against exit
+                stuck = true;
+            }
+        }
+        return stuck;
     }
 }
 Traveler.structureMatrixCache = {};
