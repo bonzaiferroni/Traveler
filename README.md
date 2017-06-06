@@ -35,6 +35,7 @@ The file itself has comments, and you can also find documentation [in the wiki](
 ## Changelog
 
 2017-06-05
+* Fixed bug in the commented line of code that registered whether creeps were in a hostile room or not.
 * New version of Traveler! See what is different [here](https://github.com/bonzaiferroni/Traveler/wiki/Improving-Traveler). The old version can still be found [here](https://github.com/bonzaiferroni/bonzAI/wiki/Traveler-API).
 
 2017-03-10
