@@ -24,7 +24,7 @@ class Traveler {
         destination = this.normalizePos(destination);
         // manage case where creep is nearby destination
         let rangeToDestination = creep.pos.getRangeTo(destination);
-        if (rangeToDestination <= options.range) {
+        if (options.range && rangeToDestination <= options.range) {
             return OK;
         }
         else if (rangeToDestination <= 1) {
@@ -118,7 +118,10 @@ class Traveler {
         let nextDirection = parseInt(travelData.path[0], 10);
         if (options.returnData) {
             if (nextDirection) {
-                options.returnData.nextPos = Traveler.positionAtDirection(creep.pos, nextDirection);
+                let nextPos = Traveler.positionAtDirection(creep.pos, nextDirection);
+                if (nextPos) {
+                    options.returnData.nextPos = nextPos;
+                }
             }
             options.returnData.state = state;
             options.returnData.path = travelData.path;
@@ -222,7 +225,10 @@ class Traveler {
         let roomDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
         let allowedRooms = options.route;
         if (!allowedRooms && (options.useFindRoute || (options.useFindRoute === undefined && roomDistance > 2))) {
-            allowedRooms = this.findRoute(origin.roomName, destination.roomName, options);
+            let route = this.findRoute(origin.roomName, destination.roomName, options);
+            if (route) {
+                allowedRooms = route;
+            }
         }
         let roomsSearched = 0;
         let callback = (roomName) => {
