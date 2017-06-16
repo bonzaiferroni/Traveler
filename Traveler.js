@@ -340,7 +340,7 @@ class Traveler {
                     return Number.POSITIVE_INFINITY;
                 }
                 let parsed;
-                if (options.highwayBias) {
+                if (options.preferHighway) {
                     parsed = /^[WE]([0-9]+)[NS]([0-9]+)$/.exec(roomName);
                     let isHighway = (parsed[1] % 10 === 0) || (parsed[2] % 10 === 0);
                     if (isHighway) {
