@@ -396,7 +396,7 @@ export class Traveler {
                 }
 
                 let parsed;
-                if (options.highwayBias) {
+                if (options.preferHighway) {
                     parsed = /^[WE]([0-9]+)[NS]([0-9]+)$/.exec(roomName) as any;
                     let isHighway = (parsed[1] % 10 === 0) || (parsed[2] % 10 === 0);
                     if (isHighway) {
@@ -419,6 +419,7 @@ export class Traveler {
                 return highwayBias;
             },
         });
+
         if (!_.isArray(ret)) {
             console.log(`couldn't findRoute to ${destination}`);
             return;
@@ -631,8 +632,8 @@ export class Traveler {
     }
 }
 
-type Coord = {x: number, y: number};
-type HasPos = {pos: RoomPosition}
+export type Coord = {x: number, y: number};
+export type HasPos = {pos: RoomPosition}
 
 export interface TravelData {
     state: any[];
