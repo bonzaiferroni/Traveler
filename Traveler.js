@@ -3,6 +3,7 @@
  * Example: var Traveler = require('Traveler.js');
  */
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 class Traveler {
     /**
      * move creep to destination
@@ -298,6 +299,7 @@ class Traveler {
                     console.log(`TRAVELER: second attempt was ${ret.incomplete ? "not " : ""}successful`);
                     return ret;
                 }
+                // TODO: handle case where a wall or some other obstacle is blocking the exit assumed by findRoute
             }
             else {
             }
