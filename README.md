@@ -35,6 +35,11 @@ The file itself has comments, and you can also find documentation [in the wiki](
 
 ## Changelog
 
+2017-06-26
+* Reorganized type definitions into index.d.ts
+* Fixed bug where public ramparts were not seen as pathable
+* Fixed bug that caused exceptions due to non-existant Memory.rooms
+
 2017-06-16
 * Fixed bug that caused options.preferHighway to not prefer highways
 
