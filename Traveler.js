@@ -146,7 +146,7 @@ class Traveler {
      * @returns {RoomMemory|number}
      */
     static checkAvoid(roomName) {
-        return Memory.rooms[roomName] && Memory.rooms[roomName].avoid;
+        return Memory.rooms && Memory.rooms[roomName] && Memory.rooms[roomName].avoid;
     }
     /**
      * check if a position is an exit
