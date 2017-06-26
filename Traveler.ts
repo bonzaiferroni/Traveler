@@ -494,7 +494,7 @@ export class Traveler {
         let impassibleStructures: Structure[] = [];
         for (let structure of room.find<Structure>(FIND_STRUCTURES)) {
             if (structure instanceof StructureRampart) {
-                if (!structure.my) {
+                if (!structure.my && !structure.isPublic) {
                     impassibleStructures.push(structure);
                 }
             } else if (structure instanceof StructureRoad) {
