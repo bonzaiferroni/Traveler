@@ -653,6 +653,11 @@ const STATE_DEST_X = 4;
 const STATE_DEST_Y = 5;
 const STATE_DEST_ROOMNAME = 6;
 
+// create assumed room object that may not exist in new games
+if (!Memory.rooms) {
+    Memory.rooms = {};
+}
+
 // assigns a function to Creep.prototype: creep.travelTo(destination)
 Creep.prototype.travelTo = function(destination: RoomPosition|{pos: RoomPosition}, options?: TravelToOptions) {
     return Traveler.travelTo(this, destination, options);
