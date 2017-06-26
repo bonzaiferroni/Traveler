@@ -44,7 +44,7 @@ interface TravelState {
 }
 
 interface Creep {
-    travelTo(destination: HasPos|RoomPosition, ops?: TravelToOptions);
+    travelTo(destination: HasPos|RoomPosition, ops?: TravelToOptions): number;
 }
 
 type Coord = {x: number, y: number};
