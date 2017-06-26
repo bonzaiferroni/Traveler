@@ -47,7 +47,7 @@ class Traveler {
         let travelData = creep.memory._trav;
         let state = this.deserializeState(travelData, destination);
         // uncomment to visualize destination
-        // this.circle(destination, "orange");
+        // this.circle(destination.pos, "orange");
         // check if creep is stuck
         if (this.isStuck(creep, state)) {
             state.stuckCount++;
