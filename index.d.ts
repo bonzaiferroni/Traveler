@@ -1,3 +1,10 @@
+interface PathfinderReturn {
+    path: RoomPosition[];
+    ops: number;
+    cost: number;
+    incomplete: boolean;
+}
+
 interface TravelToReturnData {
     nextPos?: RoomPosition;
     pathfinderReturn?: PathfinderReturn;
