@@ -367,7 +367,7 @@ class Traveler {
             },
         });
         if (!_.isArray(ret)) {
-            console.log(`couldn't findRoute to ${destination}`);
+            console.log(`couldnt findRoute to ${destination}`);
             return;
         }
         for (let value of ret) {
