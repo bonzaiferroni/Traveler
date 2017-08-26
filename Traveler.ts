@@ -29,7 +29,7 @@ export class Traveler {
 
         if (creep.fatigue > 0) {
             Traveler.circle(creep.pos, "aqua", .3);
-            return ERR_BUSY;
+            return ERR_TIRED;
         }
 
         destination = this.normalizePos(destination);
