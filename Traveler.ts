@@ -257,11 +257,11 @@ export class Traveler {
      * @param origin
      * @param destination
      * @param options
-     * @returns {PathfinderReturn}
+     * @returns {PathFinderPath}
      */
 
     public static findTravelPath(origin: RoomPosition|HasPos, destination: RoomPosition|HasPos,
-                                 options: TravelToOptions = {}): PathfinderReturn {
+                                 options: TravelToOptions = {}): PathFinderPath {
 
         _.defaults(options, {
             ignoreCreeps: true,
@@ -761,7 +761,6 @@ export class Traveler {
 // this might be higher than you wish, setting it lower is a great way to diagnose creep behavior issues. When creeps
 // need to repath to often or they aren't finding valid paths, it can sometimes point to problems elsewhere in your code
 const REPORT_CPU_THRESHOLD = 1000;
-
 const DEFAULT_MAXOPS = 20000;
 const DEFAULT_STUCK_VALUE = 2;
 const STATE_PREV_X = 0;
@@ -777,6 +776,56 @@ const ROOMTYPE_CORE = 2;
 const ROOMTYPE_HIGHWAY = 3;
 
 // assigns a function to Creep.prototype: creep.travelTo(destination)
-Creep.prototype.travelTo = function(destination: RoomPosition|{pos: RoomPosition}, options?: TravelToOptions) {
-    return Traveler.travelTo(this, destination, options);
-};
+// Creep.prototype.travelTo = function(destination: RoomPosition|{pos: RoomPosition}, options?: TravelToOptions) {
+//     return Traveler.travelTo(this, destination, options);
+// };
+
+export interface TravelToReturnData {
+    nextPos?: RoomPosition;
+    pathfinderReturn?: PathFinderPath;
+    state?: TravelState;
+    path?: string;
+}
+
+export interface TravelToOptions {
+    ignoreRoads?: boolean;
+    ignoreCreeps?: boolean;
+    ignoreStructures?: boolean;
+    preferHighway?: boolean;
+    highwayBias?: number;
+    allowHostile?: boolean;
+    allowSK?: boolean;
+    range?: number;
+    obstacles?: {pos: RoomPosition}[];
+    roomCallback?: (roomName: string, matrix: CostMatrix) => CostMatrix | boolean;
+    routeCallback?: (roomName: string) => number;
+    returnData?: TravelToReturnData;
+    restrictDistance?: number;
+    useFindRoute?: boolean;
+    maxOps?: number;
+    movingTarget?: boolean;
+    freshMatrix?: boolean;
+    offRoad?: boolean;
+    stuckValue?: number;
+    maxRooms?: number;
+    repath?: number;
+    route?: {[roomName: string]: boolean};
+    ensurePath?: boolean;
+    pushy?: boolean;
+}
+
+export interface TravelData {
+    state: any[];
+    path: string;
+    delay: number;
+}
+
+export interface TravelState {
+    stuckCount: number;
+    lastCoord: Coord;
+    destination: RoomPosition;
+    cpu: number;
+}
+
+export type Coord = {x: number, y: number};
+export type HasPos = {pos: RoomPosition}
