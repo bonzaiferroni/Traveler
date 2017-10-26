@@ -1,8 +1,8 @@
+"use strict";
 /**
  * To start using Traveler, require it in main.js:
  * Example: var Traveler = require('Traveler.js');
  */
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Traveler {
     /**
@@ -13,6 +13,9 @@ class Traveler {
      * @returns {number}
      */
     static travelTo(creep, destination, options = {}) {
+        if (creep.name === "W3N6m_leeroy_92") {
+            console.log(Game.time, destination);
+        }
         // uncomment if you would like to register hostile rooms entered
         // this.updateRoomStatus(creep.room);
         if (!destination) {
@@ -20,9 +23,23 @@ class Traveler {
         }
         if (creep.fatigue > 0) {
             Traveler.circle(creep.pos, "aqua", .3);
-            return ERR_BUSY;
+            return ERR_TIRED;
         }
         destination = this.normalizePos(destination);
+        // initialize data object
+        if (!creep.memory._trav) {
+            creep.memory._trav = {};
+        }
+        let travelData = creep.memory._trav;
+        if (travelData.delay !== undefined) {
+            if (travelData.delay <= 0) {
+                delete travelData.delay;
+            }
+            else {
+                travelData.delay--;
+                return OK;
+            }
+        }
         // manage case where creep is nearby destination
         let rangeToDestination = creep.pos.getRangeTo(destination);
         if (options.range && rangeToDestination <= options.range) {
@@ -39,19 +56,17 @@ class Traveler {
             }
             return OK;
         }
-        // initialize data object
-        if (!creep.memory._trav) {
-            delete creep.memory._travel;
-            creep.memory._trav = {};
-        }
-        let travelData = creep.memory._trav;
         let state = this.deserializeState(travelData, destination);
         // uncomment to visualize destination
         // this.circle(destination.pos, "orange");
         // check if creep is stuck
+        let pushedCreep;
         if (this.isStuck(creep, state)) {
             state.stuckCount++;
             Traveler.circle(creep.pos, "magenta", state.stuckCount * .2);
+            if (options.pushy) {
+                pushedCreep = this.pushCreep(creep, state.stuckCount >= 2);
+            }
         }
         else {
             state.stuckCount = 0;
@@ -60,7 +75,7 @@ class Traveler {
         if (!options.stuckValue) {
             options.stuckValue = DEFAULT_STUCK_VALUE;
         }
-        if (state.stuckCount >= options.stuckValue && Math.random() > .5) {
+        if (state.stuckCount >= options.stuckValue && !pushedCreep && Math.random() > .5) {
             options.ignoreCreeps = false;
             options.freshMatrix = true;
             delete travelData.path;
@@ -146,7 +161,7 @@ class Traveler {
      * @returns {RoomMemory|number}
      */
     static checkAvoid(roomName) {
-        return Memory.rooms && Memory.rooms[roomName] && Memory.rooms[roomName].avoid;
+        return Memory.rooms[roomName] && Memory.rooms[roomName].avoid;
     }
     /**
      * check if a position is an exit
@@ -155,6 +170,9 @@ class Traveler {
      */
     static isExit(pos) {
         return pos.x === 0 || pos.y === 0 || pos.x === 49 || pos.y === 49;
+    }
+    static isValid(pos) {
+        return pos.x >= 0 && pos.y >= 0 && pos.x <= 49 && pos.y <= 49;
     }
     /**
      * check two coordinates match
@@ -253,7 +271,7 @@ class Traveler {
                     }
                 }
                 else if (options.ignoreCreeps || roomName !== originRoomName) {
-                    matrix = this.getStructureMatrix(room, options.freshMatrix);
+                    matrix = this.getStructureMatrix(roomName, options.freshMatrix);
                 }
                 else {
                     matrix = this.getCreepMatrix(room);
@@ -266,6 +284,17 @@ class Traveler {
                         }
                         matrix.set(obstacle.pos.x, obstacle.pos.y, 0xff);
                     }
+                }
+            }
+            else {
+                if (!allowedRooms || !allowedRooms[roomName]) {
+                    let roomType = this.roomType(roomName);
+                    if (roomType === ROOMTYPE_SOURCEKEEPER) {
+                        return false;
+                    }
+                }
+                if (this.structureMatrixCache[roomName]) {
+                    matrix = this.structureMatrixCache[roomName];
                 }
             }
             if (options.roomCallback) {
@@ -286,7 +315,7 @@ class Traveler {
             swampCost: options.offRoad ? 1 : options.ignoreRoads ? 5 : 10,
             roomCallback: callback,
         });
-        if (ret.incomplete && options.ensurePath) {
+        if (ret.incomplete && options.ensurePath && roomDistance > 0 && options.ignoreCreeps) {
             if (options.useFindRoute === undefined) {
                 // handle case where pathfinder failed at a short distance due to not using findRoute
                 // can happen for situations where the creep would have to take an uncommonly indirect path
@@ -305,6 +334,19 @@ class Traveler {
             }
         }
         return ret;
+    }
+    static findPathDistance(origin, destination, options = {}) {
+        if (options.range === undefined) {
+            options.range = 1;
+        }
+        let ret = this.findTravelPath(origin, destination, options);
+        let lastPos = _.last(ret.path);
+        if (!lastPos || !lastPos.inRangeTo(destination, options.range)) {
+            return -1;
+        }
+        else {
+            return ret.path.length;
+        }
     }
     /**
      * find a viable sequence of rooms that can be used to narrow down pathfinder's search algorithm
@@ -341,27 +383,13 @@ class Traveler {
                     // room is marked as "avoid" in room memory
                     return Number.POSITIVE_INFINITY;
                 }
-                let parsed;
-                if (options.preferHighway) {
-                    parsed = /^[WE]([0-9]+)[NS]([0-9]+)$/.exec(roomName);
-                    let isHighway = (parsed[1] % 10 === 0) || (parsed[2] % 10 === 0);
-                    if (isHighway) {
-                        return 1;
-                    }
+                let roomType = this.roomType(roomName);
+                if (options.preferHighway && roomType === ROOMTYPE_HIGHWAY) {
+                    return 1;
                 }
                 // SK rooms are avoided when there is no vision in the room, harvested-from SK rooms are allowed
-                if (!options.allowSK && !Game.rooms[roomName]) {
-                    if (!parsed) {
-                        parsed = /^[WE]([0-9]+)[NS]([0-9]+)$/.exec(roomName);
-                    }
-                    let fMod = parsed[1] % 10;
-                    let sMod = parsed[2] % 10;
-                    let isSK = !(fMod === 5 && sMod === 5) &&
-                        ((fMod >= 4) && (fMod <= 6)) &&
-                        ((sMod >= 4) && (sMod <= 6));
-                    if (isSK) {
-                        return 10 * highwayBias;
-                    }
+                if (!options.allowSK && !Game.rooms[roomName] && roomType === ROOMTYPE_SOURCEKEEPER) {
+                    return 10 * highwayBias;
                 }
                 return highwayBias;
             },
@@ -374,6 +402,13 @@ class Traveler {
             allowedRooms[value.room] = true;
         }
         return allowedRooms;
+    }
+    static findRouteDistance(roomName, otherRoomName, options) {
+        let route = this.findRoute(roomName, otherRoomName, options);
+        if (!route) {
+            return -1;
+        }
+        return Object.keys(route).length - 1;
     }
     /**
      * check how many rooms were included in a route returned by findRoute
@@ -397,7 +432,16 @@ class Traveler {
      * @param freshMatrix
      * @returns {any}
      */
-    static getStructureMatrix(room, freshMatrix) {
+    static getStructureMatrix(roomName, freshMatrix) {
+        let room = Game.rooms[roomName];
+        if (!room) {
+            if (this.structureMatrixCache[roomName]) {
+                return this.structureMatrixCache[roomName];
+            }
+            else {
+                return;
+            }
+        }
         if (!this.structureMatrixCache[room.name] || (freshMatrix && Game.time !== this.structureMatrixTick)) {
             this.structureMatrixTick = Game.time;
             let matrix = new PathFinder.CostMatrix();
@@ -413,7 +457,7 @@ class Traveler {
     static getCreepMatrix(room) {
         if (!this.creepMatrixCache[room.name] || Game.time !== this.creepMatrixTick) {
             this.creepMatrixTick = Game.time;
-            this.creepMatrixCache[room.name] = Traveler.addCreepsToMatrix(room, this.getStructureMatrix(room, true).clone());
+            this.creepMatrixCache[room.name] = Traveler.addCreepsToMatrix(room, this.getStructureMatrix(room.name, true).clone());
         }
         return this.creepMatrixCache[room.name];
     }
@@ -496,10 +540,53 @@ class Traveler {
         let offsetY = [0, -1, -1, 0, 1, 1, 1, 0, -1];
         let x = origin.x + offsetX[direction];
         let y = origin.y + offsetY[direction];
-        if (x > 49 || x < 0 || y > 49 || y < 0) {
+        let position = new RoomPosition(x, y, origin.roomName);
+        if (!this.isValid(position)) {
             return;
         }
-        return new RoomPosition(x, y, origin.roomName);
+        return position;
+    }
+    static nextDirectionInPath(creep) {
+        let travelData = creep.memory._trav;
+        if (!travelData || !travelData.path || travelData.path.length === 0) {
+            return;
+        }
+        return Number.parseInt(travelData.path[0]);
+    }
+    static nextPositionInPath(creep) {
+        let nextDir = this.nextDirectionInPath(creep);
+        if (!nextDir) {
+            return;
+        }
+        return this.positionAtDirection(creep.pos, nextDir);
+    }
+    static pushCreep(creep, insist) {
+        let nextDir = this.nextDirectionInPath(creep);
+        if (!nextDir) {
+            return false;
+        }
+        let nextPos = this.positionAtDirection(creep.pos, nextDir);
+        if (!nextPos) {
+            return;
+        }
+        let otherCreep = nextPos.lookFor(LOOK_CREEPS)[0];
+        if (!otherCreep) {
+            return false;
+        }
+        let otherData = otherCreep.memory._trav;
+        if (!insist && otherData && otherData.path && otherData.path.length > 1) {
+            return false;
+        }
+        let pushDirection = otherCreep.pos.getDirectionTo(creep);
+        let outcome = otherCreep.move(pushDirection);
+        if (outcome !== OK) {
+            return false;
+        }
+        if (otherData && otherData.path) {
+            otherData.path = nextDir + otherData.path;
+            otherData.delay = 1;
+        }
+        return true;
     }
     /**
      * convert room avoidance memory from the old pattern to the one currently used
@@ -562,9 +649,52 @@ class Traveler {
         }
         return stuck;
     }
+    /**
+     * Return missionRoom coordinates for a given Room, authored by tedivm
+     * @param roomName
+     * @returns {{x: (string|any), y: (string|any), x_dir: (string|any), y_dir: (string|any)}}
+     */
+    static getRoomCoordinates(roomName) {
+        let coordinateRegex = /(E|W)(\d+)(N|S)(\d+)/g;
+        let match = coordinateRegex.exec(roomName);
+        if (!match) {
+            return;
+        }
+        let xDir = match[1];
+        let x = match[2];
+        let yDir = match[3];
+        let y = match[4];
+        return {
+            x: Number(x),
+            y: Number(y),
+            xDir: xDir,
+            yDir: yDir,
+        };
+    }
+    static roomType(roomName) {
+        if (!this.roomTypeCache[roomName]) {
+            let type;
+            let coords = this.getRoomCoordinates(roomName);
+            if (coords.x % 10 === 0 || coords.y % 10 === 0) {
+                type = ROOMTYPE_HIGHWAY;
+            }
+            else if (coords.x % 5 === 0 && coords.y % 5 === 0) {
+                type = ROOMTYPE_CORE;
+            }
+            else if (coords.x % 10 <= 6 && coords.x % 10 >= 4 && coords.y % 10 <= 6 && coords.y % 10 >= 4) {
+                type = ROOMTYPE_SOURCEKEEPER;
+            }
+            else {
+                type = ROOMTYPE_CONTROLLER;
+            }
+            this.roomTypeCache[roomName] = type;
+        }
+        return this.roomTypeCache[roomName];
+    }
 }
 Traveler.structureMatrixCache = {};
 Traveler.creepMatrixCache = {};
+Traveler.roomTypeCache = {};
 exports.Traveler = Traveler;
 // this might be higher than you wish, setting it lower is a great way to diagnose creep behavior issues. When creeps
 // need to repath to often or they aren't finding valid paths, it can sometimes point to problems elsewhere in your code
@@ -578,6 +708,10 @@ const STATE_CPU = 3;
 const STATE_DEST_X = 4;
 const STATE_DEST_Y = 5;
 const STATE_DEST_ROOMNAME = 6;
+const ROOMTYPE_CONTROLLER = 0;
+const ROOMTYPE_SOURCEKEEPER = 1;
+const ROOMTYPE_CORE = 2;
+const ROOMTYPE_HIGHWAY = 3;
 // assigns a function to Creep.prototype: creep.travelTo(destination)
 Creep.prototype.travelTo = function (destination, options) {
     return Traveler.travelTo(this, destination, options);

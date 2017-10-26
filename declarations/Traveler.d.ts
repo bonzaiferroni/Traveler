@@ -1,3 +1,7 @@
+interface Creep {
+    travelTo(destination: HasPos|RoomPosition, ops?: TravelToOptions);
+}
+
 interface PathfinderReturn {
     path: RoomPosition[];
     ops: number;
@@ -10,6 +14,13 @@ interface TravelToReturnData {
     pathfinderReturn?: PathfinderReturn;
     state?: TravelState;
     path?: string;
+}
+
+interface PathfinderReturn {
+    path: RoomPosition[];
+    ops: number;
+    cost: number;
+    incomplete: boolean;
 }
 
 interface TravelToOptions {
@@ -36,11 +47,13 @@ interface TravelToOptions {
     repath?: number;
     route?: {[roomName: string]: boolean};
     ensurePath?: boolean;
+    pushy?: boolean;
 }
 
 interface TravelData {
     state: any[];
     path: string;
+    delay: number;
 }
 
 interface TravelState {
@@ -50,10 +63,5 @@ interface TravelState {
     cpu: number;
 }
 
-interface Creep {
-    travelTo(destination: HasPos|RoomPosition, ops?: TravelToOptions): number;
-}
-
 type Coord = {x: number, y: number};
 type HasPos = {pos: RoomPosition}
-
