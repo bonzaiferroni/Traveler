@@ -827,5 +827,12 @@ export interface TravelState {
     cpu: number;
 }
 
+export interface RoomCoord {
+    x: number;
+    y: number;
+    xDir: string;
+    yDir: string;
+}
+
 export type Coord = {x: number, y: number};
 export type HasPos = {pos: RoomPosition}

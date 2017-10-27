@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "sourceMap": false,
+    "declaration": true,
+    "declarationDir": "./dist"
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

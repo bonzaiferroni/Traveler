@@ -1,0 +1,12 @@
+{
+  "name": "Traveler",
+  "version": "0.0.1",
+  "main": "./dist/Traveler.js",
+  "types": "./declarations/Traveler.d.ts",
+  "devDependencies": {
+    "@types/lodash": "^3.10.0"
+  },
+  "dependencies": {
+    "typings": "^2.1.1"
+  }
+}
