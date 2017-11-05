@@ -1,7 +1,16 @@
+/// <reference types="typed-screeps" />
 /**
  * To start using Traveler, require it in main.js:
  * Example: var Traveler = require('Traveler.js');
  */
+declare global  {
+    interface CreepMemory {
+        _trav?: TravelData;
+    }
+    interface RoomMemory {
+        avoid?: number;
+    }
+}
 export declare class Traveler {
     private static structureMatrixCache;
     private static creepMatrixCache;
@@ -27,7 +36,7 @@ export declare class Traveler {
      * @param roomName
      * @returns {RoomMemory|number}
      */
-    static checkAvoid(roomName: string): any;
+    static checkAvoid(roomName: string): number;
     /**
      * check if a position is an exit
      * @param pos
@@ -210,3 +219,4 @@ export declare type Coord = {
 export declare type HasPos = {
     pos: RoomPosition;
 };
+export {};

@@ -2,11 +2,10 @@
   "name": "Traveler",
   "version": "0.0.1",
   "main": "./dist/Traveler.js",
-  "types": "./declarations/Traveler.d.ts",
+  "types": "./dist/Traveler.d.ts",
   "devDependencies": {
-    "@types/lodash": "^3.10.0"
+    "@types/lodash": "^3.10.1",
+    "typed-screeps": "^1.0.3"
   },
-  "dependencies": {
-    "typings": "^2.1.1"
-  }
+  "dependencies": {}
 }
