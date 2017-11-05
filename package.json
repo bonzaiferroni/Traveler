@@ -2,7 +2,7 @@
   "name": "Traveler",
   "version": "0.0.1",
   "main": "./dist/Traveler.js",
-  "types": "./declarations/Traveler.d.ts",
+  "types": "./dist/Traveler.d.ts",
   "devDependencies": {
     "@types/lodash": "^3.10.1",
     "typed-screeps": "github:screepers/typed-screeps"
