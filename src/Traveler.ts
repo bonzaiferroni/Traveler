@@ -3,6 +3,16 @@
  * Example: var Traveler = require('Traveler.js');
  */
 
+declare global {
+    interface CreepMemory {
+        _trav?: TravelData;
+    }
+
+    interface RoomMemory {
+        avoid?: number;
+    }
+}
+
 export class Traveler {
 
     private static structureMatrixCache: {[roomName: string]: CostMatrix} = {};
@@ -37,7 +47,7 @@ export class Traveler {
 
         // initialize data object
         if (!creep.memory._trav) {
-            creep.memory._trav = {};
+            creep.memory._trav = {} as TravelData;
         }
         let travelData = creep.memory._trav as TravelData;
 
@@ -162,7 +172,7 @@ export class Traveler {
             options.returnData.state = state;
             options.returnData.path = travelData.path;
         }
-        return creep.move(nextDirection);
+        return creep.move(nextDirection as DirectionConstant);
     }
 
     /**

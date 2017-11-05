@@ -5,9 +5,13 @@
     "sourceMap": false,
     "declaration": true,
     "declarationDir": "./dist",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "types": ["lodash", "typed-screeps"]
   },
   "exclude": [
     "node_modules"
+  ],
+  "include": [
+    "./src/**/*.ts"
   ]
 }
