@@ -5,7 +5,7 @@
   "types": "./dist/Traveler.d.ts",
   "devDependencies": {
     "@types/lodash": "^3.10.1",
-    "typed-screeps": "github:screepers/typed-screeps"
+    "typed-screeps": "^1.0.3"
   },
   "dependencies": {}
 }
