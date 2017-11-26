@@ -287,6 +287,12 @@ export class Traveler {
         destination = this.normalizePos(destination);
         let originRoomName = origin.roomName;
         let destRoomName = destination.roomName;
+        
+        // Prevents creeps from stopping in a different room
+        let distanceToEdge = _.min([destination.x, 49 - destination.x, destination.y, 49 - destination.y]);
+        if (distanceToEdge < options.range!) {
+            options.range = distanceToEdge - 1;
+        }
 
         // check to see whether findRoute should be used
         let roomDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
