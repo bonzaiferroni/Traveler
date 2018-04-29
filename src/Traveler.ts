@@ -296,8 +296,6 @@ export class Traveler {
             if (route) { allowedRooms = route; }
         }
 
-        let roomsSearched = 0;
-
         let callback = (roomName: string): CostMatrix | boolean => {
 
             if (allowedRooms) {
@@ -308,8 +306,6 @@ export class Traveler {
                 && roomName !== destRoomName && roomName !== originRoomName) {
                 return false;
             }
-
-            roomsSearched++;
 
             let matrix;
             let room = Game.rooms[roomName];
@@ -326,7 +322,7 @@ export class Traveler {
                 }
 
                 if (options.obstacles) {
-                    matrix = matrix.clone();
+                    matrix = matrix!.clone();
                     for (let obstacle of options.obstacles) {
                         if (obstacle.pos.roomName !== roomName) { continue; }
                         matrix.set(obstacle.pos.x, obstacle.pos.y, 0xff);
@@ -502,13 +498,13 @@ export class Traveler {
      * @returns {any}
      */
 
-    public static getStructureMatrix(roomName: string, freshMatrix?: boolean): CostMatrix {
+    public static getStructureMatrix(roomName: string, freshMatrix?: boolean): CostMatrix | undefined {
         let room = Game.rooms[roomName];
         if (!room) {
             if (this.structureMatrixCache[roomName]) {
                 return this.structureMatrixCache[roomName];
             } else {
-                return;
+                return undefined;
             }
         }
 
@@ -526,11 +522,13 @@ export class Traveler {
      * @returns {any}
      */
 
-    public static getCreepMatrix(room: Room) {
+    public static getCreepMatrix(room: Room): CostMatrix | undefined {
         if (!this.creepMatrixCache[room.name] || Game.time !== this.creepMatrixTick) {
             this.creepMatrixTick = Game.time;
-            this.creepMatrixCache[room.name] = Traveler.addCreepsToMatrix(room,
-                this.getStructureMatrix(room.name, true).clone());
+            const matrix = this.getStructureMatrix(room.name, true);
+            if (matrix !== undefined) {
+                this.creepMatrixCache[room.name] = Traveler.addCreepsToMatrix(room, matrix.clone());
+            }
         }
         return this.creepMatrixCache[room.name];
     }
@@ -560,7 +558,7 @@ export class Traveler {
             }
         }
 
-        for (let site of room.find<ConstructionSite>(FIND_MY_CONSTRUCTION_SITES)) {
+        for (let site of room.find(FIND_MY_CONSTRUCTION_SITES)) {
             if (site.structureType === STRUCTURE_CONTAINER || site.structureType === STRUCTURE_ROAD
                 || site.structureType === STRUCTURE_RAMPART) { continue; }
             matrix.set(site.pos.x, site.pos.y, 0xff);
@@ -581,7 +579,7 @@ export class Traveler {
      */
 
     public static addCreepsToMatrix(room: Room, matrix: CostMatrix): CostMatrix {
-        room.find<Creep>(FIND_CREEPS).forEach((creep: Creep) => matrix.set(creep.pos.x, creep.pos.y, 0xff) );
+        room.find(FIND_CREEPS).forEach((creep: Creep) => matrix.set(creep.pos.x, creep.pos.y, 0xff) );
         return matrix;
     }
 
@@ -615,25 +613,25 @@ export class Traveler {
      * @returns {RoomPosition}
      */
 
-    public static positionAtDirection(origin: RoomPosition, direction: number): RoomPosition {
+    public static positionAtDirection(origin: RoomPosition, direction: number): RoomPosition | undefined {
         let offsetX = [0, 0, 1, 1, 1, 0, -1, -1, -1];
         let offsetY = [0, -1, -1, 0, 1, 1, 1, 0, -1];
         let x = origin.x + offsetX[direction];
         let y = origin.y + offsetY[direction];
         let position = new RoomPosition(x, y, origin.roomName);
-        if (!this.isValid(position)) { return; }
+        if (!this.isValid(position)) { return undefined; }
         return position;
     }
 
-    public static nextDirectionInPath(creep: Creep): number {
+    public static nextDirectionInPath(creep: Creep): number | undefined {
         let travelData = creep.memory._trav as TravelData;
-        if (!travelData || !travelData.path || travelData.path.length === 0) { return; }
+        if (!travelData || !travelData.path || travelData.path.length === 0) { return undefined; }
         return Number.parseInt(travelData.path[0]);
     }
 
-    public static nextPositionInPath(creep: Creep): RoomPosition {
+    public static nextPositionInPath(creep: Creep): RoomPosition | undefined {
         let nextDir = this.nextDirectionInPath(creep);
-        if (!nextDir) { return; }
+        if (!nextDir) { return undefined; }
         return this.positionAtDirection(creep.pos, nextDir);
     }
 
@@ -641,8 +639,8 @@ export class Traveler {
         let nextDir = this.nextDirectionInPath(creep);
         if (!nextDir) { return false; }
         let nextPos = this.positionAtDirection(creep.pos, nextDir);
-        if (!nextPos) { return; }
-        let otherCreep = nextPos.lookFor<Creep>(LOOK_CREEPS)[0];
+        if (!nextPos) { return false; }
+        let otherCreep = nextPos.lookFor(LOOK_CREEPS)[0];
         if (!otherCreep) { return false; }
 
         let otherData = otherCreep.memory._trav as TravelData;
@@ -730,11 +728,11 @@ export class Traveler {
      * @returns {{x: (string|any), y: (string|any), x_dir: (string|any), y_dir: (string|any)}}
      */
 
-    public static getRoomCoordinates(roomName: string): RoomCoord {
+    public static getRoomCoordinates(roomName: string): RoomCoord | undefined {
 
         let coordinateRegex = /(E|W)(\d+)(N|S)(\d+)/g;
         let match = coordinateRegex.exec(roomName);
-        if (!match) { return; }
+        if (!match) { return undefined; }
 
         let xDir = match[1];
         let x = match[2];
@@ -749,10 +747,11 @@ export class Traveler {
         };
     }
 
-    public static roomType(roomName: string): number {
+    public static roomType(roomName: string): number | undefined {
         if (!this.roomTypeCache[roomName]) {
             let type: number;
             let coords = this.getRoomCoordinates(roomName);
+            if (coords === undefined) { return undefined; }
             if (coords.x % 10 === 0 || coords.y % 10 === 0) {
                 type = ROOMTYPE_HIGHWAY;
             } else if (coords.x % 5 === 0 && coords.y % 5 === 0) {
