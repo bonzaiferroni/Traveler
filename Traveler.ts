@@ -60,7 +60,7 @@ export class Traveler {
         let state = this.deserializeState(travelData, destination);
 
         // uncomment to visualize destination
-        // this.circle(destination.pos, "orange");
+        // this.circle(destination, "orange");
 
         // check if creep is stuck
         if (this.isStuck(creep, state)) {
