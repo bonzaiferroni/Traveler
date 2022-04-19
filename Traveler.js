@@ -398,8 +398,9 @@ class Traveler {
      * @returns {any}
      */
     static getStructureMatrix(room, freshMatrix) {
-        if (!this.structureMatrixCache[room.name] || (freshMatrix && Game.time !== this.structureMatrixTick)) {
-            this.structureMatrixTick = Game.time;
+        if (!this.structureMatrixTick) this.structureMatrixTick = {};
+        if (!this.structureMatrixCache[room.name] || (freshMatrix && Game.time !== this.structureMatrixTick[room.name])) {
+            this.structureMatrixTick[room.name] = Game.time;
             let matrix = new PathFinder.CostMatrix();
             this.structureMatrixCache[room.name] = Traveler.addStructuresToMatrix(room, matrix, 1);
         }
@@ -411,8 +412,9 @@ class Traveler {
      * @returns {any}
      */
     static getCreepMatrix(room) {
-        if (!this.creepMatrixCache[room.name] || Game.time !== this.creepMatrixTick) {
-            this.creepMatrixTick = Game.time;
+        if (!this.creepMatrixTick) this.creepMatrixTick = {};
+        if (!this.creepMatrixCache[room.name] || Game.time !== this.creepMatrixTick[room.name]) {
+            this.creepMatrixTick[room.name] = Game.time;
             this.creepMatrixCache[room.name] = Traveler.addCreepsToMatrix(room, this.getStructureMatrix(room, true).clone());
         }
         return this.creepMatrixCache[room.name];
