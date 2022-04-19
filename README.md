@@ -1,4 +1,4 @@
-## **This repository is no longer being maintained, but Traveler lives on in many forks!**
+Please note: **This repository is no longer being maintained, but Traveler lives on in many forks!**
 
 # Traveler
 
