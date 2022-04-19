@@ -1,3 +1,5 @@
+## **This repository is no longer being maintained, but Traveler lives on in many forks!**
+
 # Traveler
 
 Traveler is a general-purpose tool for moving your creeps around. Feel free to fork and use in other projects.
