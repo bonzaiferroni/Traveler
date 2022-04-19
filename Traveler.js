@@ -532,7 +532,7 @@ class Traveler {
     }
     static deserializeState(travelData, destination) {
         let state = {};
-        if (travelData.state) {
+        if (travelData.state && travelData.state.length > 0) {  // avoid empty array
             state.lastCoord = { x: travelData.state[STATE_PREV_X], y: travelData.state[STATE_PREV_Y] };
             state.cpu = travelData.state[STATE_CPU];
             state.stuckCount = travelData.state[STATE_STUCK];
